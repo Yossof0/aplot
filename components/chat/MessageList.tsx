@@ -5,21 +5,21 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface MessageListProps {
-  serverId: Id<"servers">;
+  chatId: Id<"chats">;
   role: "admin" | "member";
   sessionToken?: string;
 }
 
-export function MessageList({ serverId, role, sessionToken }: MessageListProps) {
+export function MessageList({ chatId, role, sessionToken }: MessageListProps) {
   // Hooks can't be called conditionally, so both queries are declared and
   // one is always skipped via Convex's "skip" pattern based on role.
   const adminMessages = useQuery(
     api.messages.listMessagesForAdmin,
-    role === "admin" ? { serverId } : "skip",
+    role === "admin" ? { chatId } : "skip",
   );
   const memberMessages = useQuery(
     api.messages.listMessagesForMember,
-    role === "member" && sessionToken ? { serverId, sessionToken } : "skip",
+    role === "member" && sessionToken ? { chatId, sessionToken } : "skip",
   );
 
   const messages = role === "admin" ? adminMessages : memberMessages;

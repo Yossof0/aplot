@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createInviteAction } from "@/app/actions/inviteActions";
 import type { Id } from "@/convex/_generated/dataModel";
 
-export function InviteForm({ serverId }: { serverId: Id<"servers"> }) {
+export function InviteForm({ chatId }: { chatId: Id<"chats"> }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,7 +18,7 @@ export function InviteForm({ serverId }: { serverId: Id<"servers"> }) {
     setIsSubmitting(true);
 
     try {
-      const result = await createInviteAction(serverId, username, password);
+      const result = await createInviteAction(chatId, username, password);
       if (!result.success) {
         setError(result.error);
         return;

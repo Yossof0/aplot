@@ -1,6 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/booking(.*)"]);
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/booking(.*)",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
@@ -10,10 +13,10 @@ export default clerkMiddleware(async (auth, req) => {
   // claimed members authenticate via the burned-invite session cookie instead,
   // and /chat itself decides admin-vs-member view server-side (see page.tsx).
 });
+
 export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip)).*)",
     "/(api|trpc)(.*)",
-    "/__clerk/:path*",
   ],
 };

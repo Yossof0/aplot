@@ -6,12 +6,12 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface MessageInputProps {
-  serverId: Id<"servers">;
+  chatId: Id<"chats">;
   role: "admin" | "member";
   sessionToken?: string;
 }
 
-export function MessageInput({ serverId, role, sessionToken }: MessageInputProps) {
+export function MessageInput({ chatId, role, sessionToken }: MessageInputProps) {
   const sendMessage = useMutation(api.messages.sendMessage);
   const [body, setBody] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -29,8 +29,8 @@ export function MessageInput({ serverId, role, sessionToken }: MessageInputProps
       // is only meaningful, and only sent, for the member path.
       await sendMessage(
         role === "member" && sessionToken
-          ? { serverId, body, sessionToken }
-          : { serverId, body },
+          ? { chatId, body, sessionToken }
+          : { chatId, body },
       );
       setBody("");
     } catch {

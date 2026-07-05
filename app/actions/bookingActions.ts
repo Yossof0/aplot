@@ -3,9 +3,7 @@
 import { fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { auth } from "@clerk/nextjs/server";
-
-type DurationTier = "3d" | "7d" | "2w" | "3w" | "1m";
-type StorageTierMb = 25 | 50 | 100 | 250;
+import type { PlanTier, DurationTier, StorageTierMb } from "@/convex/lib/plans";
 
 type ActionResult<T> =
   | { success: true; data: T }
@@ -13,8 +11,10 @@ type ActionResult<T> =
 
 export async function bookServerAction(
   name: string,
+  planTier: PlanTier,
   durationTier: DurationTier,
   storageTierMb: StorageTierMb,
+  chatCapacity: number,
 ): Promise<ActionResult<{ serverId: string; expiresAt: number }>> {
   const { userId, getToken } = await auth();
   if (!userId) return { success: false, error: "Not authenticated." };
@@ -22,13 +22,10 @@ export async function bookServerAction(
   if (!token) return { success: false, error: "Not authenticated." };
 
   // TODO: gate this behind a Stripe checkout session once billing exists.
-  // Verify payment succeeded (webhook-confirmed) before calling bookServer,
-  // rather than trusting a client-supplied "paid: true" flag.
-
   try {
     const result = await fetchMutation(
       api.servers.bookServer,
-      { name, durationTier, storageTierMb },
+      { name, planTier, durationTier, storageTierMb, chatCapacity },
       { token },
     );
     return { success: true, data: result };

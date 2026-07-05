@@ -7,15 +7,16 @@ import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import type { Id } from "@/convex/_generated/dataModel";
 
+import { sessionCookieName } from "@/lib/sessionCookie";
+
 const SALT_ROUNDS = 12;
-const SESSION_COOKIE_NAME = "aplot_session";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
 export async function createInviteAction(
-  serverId: Id<"servers">,
+  chatId: Id<"chats">,
   username: string,
   password: string,
 ): Promise<ActionResult<{ inviteToken: string }>> {
@@ -28,7 +29,7 @@ export async function createInviteAction(
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const result = await fetchMutation(
       api.invites.createInviteWithHash,
-      { serverId, username, passwordHash },
+      { chatId, username, passwordHash },
       { token },
     );
     return { success: true, data: { inviteToken: result.inviteToken } };
@@ -43,7 +44,7 @@ export async function claimInviteAction(
   inviteToken: string,
   username: string,
   password: string,
-): Promise<ActionResult<{ serverId: string }>> {
+): Promise<ActionResult<{ chatId: string }>> {
   try {
     const credential = await fetchQuery(api.invites.getByToken, { inviteToken });
     if (!credential || credential.username !== username) {
@@ -55,22 +56,19 @@ export async function claimInviteAction(
       return { success: false, error: "Invalid or already-used invite." };
     }
 
-    const { sessionToken } = await fetchMutation(api.invites.claimInvite, {
+    const { sessionToken, chatId } = await fetchMutation(api.invites.claimInvite, {
       inviteToken,
     });
 
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, sessionToken, {
+    cookieStore.set(sessionCookieName(chatId), sessionToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
       path: "/",
-      // No maxAge set here deliberately — session validity is enforced
-      // server-side via the `revoked` flag and server `status`, not cookie
-      // expiry. A stolen but expired-server cookie is already useless.
     });
 
-    return { success: true, data: { serverId: credential.serverId } };
+    return { success: true, data: { chatId } };
   } catch (err) {
     console.error("claimInviteAction failed", err);
     return { success: false, error: "Invalid or already-used invite." };

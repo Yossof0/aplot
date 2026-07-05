@@ -5,8 +5,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
 
-export function MemberList({ serverId }: { serverId: Id<"servers"> }) {
-  const credentials = useQuery(api.invites.listCredentialsForServer, { serverId });
+export function MemberList({ chatId }: { chatId: Id<"chats"> }) {
+  const credentials = useQuery(api.invites.listCredentialsForChat, { chatId });
   const revokeCredential = useMutation(api.invites.revokeCredential);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 

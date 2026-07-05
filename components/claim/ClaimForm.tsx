@@ -22,7 +22,7 @@ export function ClaimForm({ inviteToken }: { inviteToken: string }) {
         setError(result.error);
         return;
       }
-      router.push(`/chat/${result.data.serverId}`);
+      router.push(`/chat/${result.data.chatId}`);
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
