@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as chats from "../chats.js";
 import type * as crons from "../crons.js";
 import type * as invites from "../invites.js";
 import type * as lib_durations from "../lib/durations.js";
+import type * as lib_plans from "../lib/plans.js";
 import type * as lib_session from "../lib/session.js";
 import type * as logs from "../logs.js";
 import type * as messages from "../messages.js";
@@ -23,9 +25,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  chats: typeof chats;
   crons: typeof crons;
   invites: typeof invites;
   "lib/durations": typeof lib_durations;
+  "lib/plans": typeof lib_plans;
   "lib/session": typeof lib_session;
   logs: typeof logs;
   messages: typeof messages;

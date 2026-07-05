@@ -3,15 +3,13 @@ import { Id } from "../_generated/dataModel";
 
 /**
  * Validates that a session token is active, unrevoked, and scoped to the
- * given server. Every query/mutation that touches chatMessages or
+ * given chat. Every query/mutation that touches chatMessages or
  * userCredentials for a claimed (non-admin) caller MUST call this first.
- * Centralizing it here means the Max Privacy check lives in one place
- * instead of being re-implemented per function.
  */
 export async function requireActiveSession(
   ctx: QueryCtx | MutationCtx,
   sessionToken: string,
-  serverId: Id<"servers">,
+  chatId: Id<"chats">,
 ) {
   const session = await ctx.db
     .query("sessions")
@@ -21,11 +19,14 @@ export async function requireActiveSession(
   if (!session || session.revoked) {
     throw new Error("Session is invalid or has been revoked.");
   }
-  if (session.serverId !== serverId) {
-    throw new Error("Session is not valid for this server.");
+  if (session.chatId !== chatId) {
+    throw new Error("Session is not valid for this chat.");
   }
 
-  const server = await ctx.db.get(serverId);
+  const chat = await ctx.db.get(chatId);
+  if (!chat) throw new Error("This chat no longer exists.");
+
+  const server = await ctx.db.get(chat.serverId);
   if (!server || server.status !== "active") {
     throw new Error("This server is no longer active.");
   }
@@ -33,10 +34,6 @@ export async function requireActiveSession(
   return session;
 }
 
-/**
- * Strips fields a member must never see, per the Max Privacy engine.
- * Admin-facing reads should NOT use this — they get the full row.
- */
 export function toMemberSafeMessage<
   T extends { senderCredentialId?: Id<"userCredentials"> },
 >(message: T): Omit<T, "senderCredentialId"> {

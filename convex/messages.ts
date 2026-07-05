@@ -4,29 +4,27 @@ import { requireActiveSession, toMemberSafeMessage } from "./lib/session";
 
 export const sendMessage = mutation({
   args: {
-    serverId: v.id("servers"),
+    chatId: v.id("chats"),
     body: v.string(),
-    // Member path only. Admin identity comes from ctx.auth, never a client arg.
-    sessionToken: v.optional(v.string()),
+    sessionToken: v.optional(v.string()), // member path only
   },
   handler: async (ctx, args) => {
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) throw new Error("Chat not found.");
+
     let senderRole: "admin" | "member";
     let senderCredentialId;
 
     const identity = await ctx.auth.getUserIdentity();
 
     if (identity) {
-      const server = await ctx.db.get(args.serverId);
+      const server = await ctx.db.get(chat.serverId);
       if (!server || server.ownerId !== identity.subject) {
-        throw new Error("You do not have access to this server.");
+        throw new Error("You do not have access to this chat.");
       }
       senderRole = "admin";
     } else if (args.sessionToken) {
-      const session = await requireActiveSession(
-        ctx,
-        args.sessionToken,
-        args.serverId,
-      );
+      const session = await requireActiveSession(ctx, args.sessionToken, args.chatId);
       senderRole = "member";
       senderCredentialId = session.credentialId;
     } else {
@@ -35,7 +33,7 @@ export const sendMessage = mutation({
 
     const bodyBytes = new TextEncoder().encode(args.body).length;
 
-    const server = await ctx.db.get(args.serverId);
+    const server = await ctx.db.get(chat.serverId);
     if (!server) throw new Error("Server not found.");
 
     const capBytes = server.storageTierMb * 1024 * 1024;
@@ -44,34 +42,34 @@ export const sendMessage = mutation({
     }
 
     await ctx.db.insert("chatMessages", {
-      serverId: args.serverId,
+      chatId: args.chatId,
       senderRole,
       senderCredentialId,
       body: args.body,
       createdAt: Date.now(),
     });
 
-    await ctx.db.patch(args.serverId, {
+    await ctx.db.patch(chat.serverId, {
       storageUsedBytes: server.storageUsedBytes + bodyBytes,
     });
 
     await ctx.db.insert("serverLogs", {
-      serverId: args.serverId,
+      serverId: chat.serverId,
+      chatId: args.chatId,
       type: "message_sent",
       createdAt: Date.now(),
     });
   },
 });
 
-// Member-facing: reactive, strips senderCredentialId per Max Privacy.
 export const listMessagesForMember = query({
-  args: { serverId: v.id("servers"), sessionToken: v.string() },
+  args: { chatId: v.id("chats"), sessionToken: v.string() },
   handler: async (ctx, args) => {
-    await requireActiveSession(ctx, args.sessionToken, args.serverId);
+    await requireActiveSession(ctx, args.sessionToken, args.chatId);
 
     const messages = await ctx.db
       .query("chatMessages")
-      .withIndex("by_server_createdAt", (q) => q.eq("serverId", args.serverId))
+      .withIndex("by_chat_createdAt", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
 
@@ -79,21 +77,23 @@ export const listMessagesForMember = query({
   },
 });
 
-// Admin-facing: full rows, for moderation.
 export const listMessagesForAdmin = query({
-  args: { serverId: v.id("servers") },
+  args: { chatId: v.id("chats") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated.");
 
-    const server = await ctx.db.get(args.serverId);
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat) throw new Error("Chat not found.");
+
+    const server = await ctx.db.get(chat.serverId);
     if (!server || server.ownerId !== identity.subject) {
-      throw new Error("You do not have access to this server.");
+      throw new Error("You do not have access to this chat.");
     }
 
     return await ctx.db
       .query("chatMessages")
-      .withIndex("by_server_createdAt", (q) => q.eq("serverId", args.serverId))
+      .withIndex("by_chat_createdAt", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
   },
