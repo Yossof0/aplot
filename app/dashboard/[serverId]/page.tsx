@@ -4,9 +4,7 @@ import { api } from "@/convex/_generated/api";
 import { redirect } from "next/navigation";
 import { StorageMeter } from "@/components/dashboard/StorageMeter";
 import { CountdownTimer } from "@/components/dashboard/CountdownTimer";
-import { InviteForm } from "@/components/dashboard/InviteForm";
-import { MemberList } from "@/components/dashboard/MemberList";
-import { ActivityLog } from "@/components/dashboard/ActivityLog";
+import { ChatList } from "@/components/dashboard/ChatList";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default async function DashboardPage({
@@ -18,7 +16,7 @@ export default async function DashboardPage({
   const { userId, getToken } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const token = await getToken({ template: "convex" });
+  const token = await getToken();
   if (!token) redirect("/sign-in");
 
   let dashboard;
@@ -29,27 +27,28 @@ export default async function DashboardPage({
       { token },
     );
   } catch {
-    redirect("/dashboard"); // not found or not owned by this user
+    redirect("/dashboard");
   }
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{dashboard.name}</h1>
-        <p className="text-sm text-muted-foreground capitalize">{dashboard.status}</p>
+        <p className="text-sm text-muted-foreground capitalize">
+          {dashboard.status} · {dashboard.planTier} plan
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StorageMeter
-          usedBytes={dashboard.storageUsedBytes}
-          capBytes={dashboard.storageCapBytes}
-        />
+        <StorageMeter usedBytes={dashboard.storageUsedBytes} capBytes={dashboard.storageCapBytes} />
         <CountdownTimer msRemaining={dashboard.msRemaining} />
       </div>
 
-      <InviteForm serverId={serverId as Id<"servers">} />
-      <MemberList serverId={serverId as Id<"servers">} />
-      <ActivityLog serverId={serverId as Id<"servers">} />
+      <ChatList
+        serverId={serverId as Id<"servers">}
+        chats={dashboard.chats}
+        chatCapacity={dashboard.chatCapacity}
+      />
     </div>
   );
 }

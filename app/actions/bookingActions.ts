@@ -18,7 +18,7 @@ export async function bookServerAction(
 ): Promise<ActionResult<{ serverId: string; expiresAt: number }>> {
   const { userId, getToken } = await auth();
   if (!userId) return { success: false, error: "Not authenticated." };
-  const token = await getToken({ template: "convex" });
+  const token = await getToken();
   if (!token) return { success: false, error: "Not authenticated." };
 
   // TODO: gate this behind a Stripe checkout session once billing exists.

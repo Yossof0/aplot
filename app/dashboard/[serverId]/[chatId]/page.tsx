@@ -17,7 +17,7 @@ export default async function ChatDashboardPage({
   const { userId, getToken } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const token = await getToken({ template: "convex" });
+  const token = await getToken();
   if (!token) redirect("/sign-in");
 
   // Cheapest ownership check available: re-use getServerDashboard and

@@ -22,7 +22,7 @@ export async function createInviteAction(
 ): Promise<ActionResult<{ inviteToken: string }>> {
   const { userId, getToken } = await auth();
   if (!userId) return { success: false, error: "Not authenticated." };
-  const token = await getToken({ template: "convex" });
+  const token = await getToken();
   if (!token) return { success: false, error: "Not authenticated." };
 
   try {
