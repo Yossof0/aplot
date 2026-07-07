@@ -4,10 +4,9 @@ import { api } from "@/convex/_generated/api";
 import { redirect } from "next/navigation";
 import { StorageMeter } from "@/components/dashboard/StorageMeter";
 import { CountdownTimer } from "@/components/dashboard/CountdownTimer";
-import { ChatList } from "@/components/dashboard/ChatList";
 import type { Id } from "@/convex/_generated/dataModel";
 
-export default async function DashboardPage({
+export default async function DashboardOverviewPage({
   params,
 }: {
   params: Promise<{ serverId: string }>;
@@ -15,20 +14,14 @@ export default async function DashboardPage({
   const { serverId } = await params;
   const { userId, getToken } = await auth();
   if (!userId) redirect("/sign-in");
-
   const token = await getToken();
   if (!token) redirect("/sign-in");
 
-  let dashboard;
-  try {
-    dashboard = await fetchQuery(
-      api.servers.getServerDashboard,
-      { serverId: serverId as Id<"servers"> },
-      { token },
-    );
-  } catch {
-    redirect("/dashboard");
-  }
+  const dashboard = await fetchQuery(
+    api.servers.getServerDashboard,
+    { serverId: serverId as Id<"servers"> },
+    { token },
+  );
 
   return (
     <div className="space-y-8">
@@ -44,11 +37,10 @@ export default async function DashboardPage({
         <CountdownTimer msRemaining={dashboard.msRemaining} />
       </div>
 
-      <ChatList
-        serverId={serverId as Id<"servers">}
-        chats={dashboard.chats}
-        chatCapacity={dashboard.chatCapacity}
-      />
+      <div className="rounded-lg border border-line p-4 text-sm text-muted">
+        {dashboard.chatsUsed} of {dashboard.chatCapacity} chat slots used. Manage chats and invites under
+        {" "}<strong>User Management</strong> in the sidebar.
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { BookingForm } from "@/components/booking/BookingForm";
+import { BookingWizard } from "@/components/booking/BookingWizard";
 
 export default async function BookingPage() {
   const { userId } = await auth();
@@ -11,11 +11,10 @@ export default async function BookingPage() {
       <div>
         <h1 className="text-xl font-semibold">Book a server</h1>
         <p className="text-sm text-muted-foreground">
-          Choose a lease duration and storage cap. You&apos;ll get an admin
-          dashboard immediately after booking.
+          Three quick steps — name, plan, then a bundle or a custom config.
         </p>
       </div>
-      <BookingForm />
+      <BookingWizard />
     </div>
   );
 }

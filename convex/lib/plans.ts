@@ -10,22 +10,24 @@ export type StorageTierMb =
 
 export const PLAN_CONFIG: Record<
   PlanTier,
-  { durationTiers: DurationTier[]; storageTiersMb: StorageTierMb[]; maxChats: number }
+  { durationTiers: DurationTier[]; storageTiersMb: StorageTierMb[]; maxChats: number; graceDays: number }
 > = {
   basic: {
     durationTiers: ["3d", "5d", "7d", "14d", "21d", "30d"],
     storageTiersMb: [3, 5, 10, 15, 20, 25],
     maxChats: 3,
+    graceDays: 3,
   },
   pro: {
     durationTiers: ["1w", "2w", "3w", "1m", "2m", "3m", "4m", "5m", "6m"],
     storageTiersMb: [25, 50, 75, 100, 125, 150, 175, 200, 225, 250],
     maxChats: 10,
+    graceDays: 7,
   },
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DURATION_TO_MS: Record<DurationTier, number> = {
+export const DAY_MS_LOOKUP: Record<DurationTier, number> = {
   "3d": 3 * DAY_MS,
   "5d": 5 * DAY_MS,
   "7d": 7 * DAY_MS,
@@ -44,7 +46,7 @@ const DURATION_TO_MS: Record<DurationTier, number> = {
 };
 
 export function computeExpiresAt(bookedAt: number, tier: DurationTier): number {
-  return bookedAt + DURATION_TO_MS[tier];
+  return bookedAt + DAY_MS_LOOKUP[tier];
 }
 
 export function msRemaining(expiresAt: number, now: number = Date.now()): number {

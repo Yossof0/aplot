@@ -146,3 +146,26 @@ h6 {
     @apply font-sans;
   }
 }
+
+/* --- SerVault monochrome design tokens (append-only, namespaced to avoid clashing with shadcn's --background/--foreground) --- */
+@theme {
+  --color-paper: #ffffff;
+  --color-ink: #0a0a0a;
+  --color-line: #e5e5e5;
+  --color-muted: #6b6b6b;
+  --color-accent: #5b5fef;
+  --color-accent-ink: #ffffff;
+
+  --font-sans: var(--font-plex-sans);
+  --font-serif: var(--font-plex-serif);
+  --font-mono: var(--font-plex-mono);
+}
+
+.dark {
+  --color-paper: #0a0a0a;
+  --color-ink: #fafafa;
+  --color-line: #262626;
+  --color-muted: #a3a3a3;
+  --color-accent: #7b7fff;
+  --color-accent-ink: #0a0a0a;
+}

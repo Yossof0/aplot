@@ -19,14 +19,37 @@ export default defineSchema({
       v.literal(100), v.literal(125), v.literal(150), v.literal(175),
       v.literal(200), v.literal(225), v.literal(250),
     ),
-    chatCapacity: v.number(), // chosen at booking, locked for the lease
+    chatCapacity: v.number(), // can change via upgradeServerCapacity mid-lease
     storageUsedBytes: v.number(),
     bookedAt: v.number(),
     expiresAt: v.number(),
-    status: v.union(v.literal("active"), v.literal("expired"), v.literal("archived")),
+    graceExpiresAt: v.optional(v.number()), // set when status flips to "grace"
+    status: v.union(v.literal("active"), v.literal("grace"), v.literal("archived")),
   })
     .index("by_owner", ["ownerId"])
-    .index("by_status_expiresAt", ["status", "expiresAt"]),
+    .index("by_status_expiresAt", ["status", "expiresAt"])
+    .index("by_status_graceExpiresAt", ["status", "graceExpiresAt"]),
+
+  pricingConfig: defineTable({
+    baseFeeCents: v.number(),
+    perMbCents: v.number(),
+    perChatSlotCents: v.number(),
+    perDayCents: v.number(),
+    basicDiscountPercent: v.number(),
+    proDiscountPercent: v.number(),
+    updatedAt: v.number(),
+  }), // singleton — only ever one row
+
+  bundlePlans: defineTable({
+    planTier: v.union(v.literal("basic"), v.literal("pro")),
+    label: v.string(),
+    storageTierMb: v.number(),
+    chatCapacity: v.number(),
+    priceCents: v.number(),
+    discountPercent: v.optional(v.number()),
+    isActive: v.boolean(),
+    order: v.number(),
+  }).index("by_planTier_order", ["planTier", "order"]),
 
   chats: defineTable({
     serverId: v.id("servers"),
@@ -45,6 +68,8 @@ export default defineSchema({
       v.literal("member_removed"),
       v.literal("message_sent"),
       v.literal("server_expired"),
+      v.literal("server_renewed"),
+      v.literal("capacity_upgraded"),
       v.literal("server_archived"),
     ),
     detail: v.optional(v.string()),

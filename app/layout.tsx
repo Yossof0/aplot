@@ -1,11 +1,12 @@
-import {ClerkProvider} from "@clerk/nextjs";
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
+import { plexSans, plexSerif, plexMono } from "@/lib/fonts";
 
 export const metadata: Metadata = {
-  title: "aPlot | Privacy-First B2B Messaging",
+  title: "SerVault | Privacy-First B2B Messaging",
   description:
-    "aPlot is a privacy-first B2B messaging platform for temporary, high-trust teams.",
+    "SerVault is a privacy-first B2B messaging platform for temporary, high-trust teams.",
 };
 
 export default function RootLayout({
@@ -14,11 +15,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full antialiased">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`h-full antialiased ${plexSans.variable} ${plexSerif.variable} ${plexMono.variable}`}
+    >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

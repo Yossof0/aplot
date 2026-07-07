@@ -1,5 +1,3 @@
-"use client";
-
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -17,7 +15,7 @@ export default async function ChatPage({
 
   const { userId } = await auth();
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookie = cookieStore.get(sessionCookieName(chatId));
   const sessionToken = cookie?.value;
 
